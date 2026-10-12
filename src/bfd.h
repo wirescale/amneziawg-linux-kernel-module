@@ -25,7 +25,6 @@
 #define _WG_BFD_H
 
 #include <linux/types.h>
-#include <asm/unaligned.h>
 
 #define WS_BFD_MAGIC		0x57534246U
 #define WS_BFD_VERSION		1
