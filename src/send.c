@@ -13,6 +13,7 @@
 #include "messages.h"
 #include "cookie.h"
 #include "type.h"
+#include "bfd.h"
 
 #ifdef COMPAT_CRYPTO_IS_ZINC
 #include <linux/simd.h>
@@ -332,6 +333,57 @@ void wg_packet_send_keepalive(struct wg_peer *peer)
 	}
 
 	wg_packet_send_staged_packets(peer);
+}
+
+void wg_packet_send_bfd_reply(struct wg_peer *peer,
+			      const struct ws_bfd_marker *probe)
+{
+	struct sk_buff *skb;
+	u8 *payload;
+
+	skb = alloc_skb(DATA_PACKET_HEAD_ROOM + WS_BFD_MARKER_LEN, GFP_ATOMIC);
+	if (unlikely(!skb))
+		return;
+	skb_reserve(skb, DATA_PACKET_HEAD_ROOM);
+	skb->dev = peer->device->dev;
+	PACKET_CB(skb)->mtu = skb->dev->mtu;
+	PACKET_CB(skb)->is_keepalive = false;
+	payload = skb_put(skb, WS_BFD_MARKER_LEN);
+	ws_bfd_encode(payload, WS_BFD_TYPE_REPLY, probe->seq, probe->ts_send,
+		      ktime_get_real_ns());
+	/* Needed by the staged send path for ECN decapsulation. */
+	skb_reset_network_header(skb);
+	skb_queue_tail(&peer->staged_packet_queue, skb);
+	wg_packet_send_staged_packets(peer);
+}
+
+void wg_packet_send_bfd_probe(struct wg_peer *peer)
+{
+	struct sk_buff *skb;
+	u8 *payload;
+	u64 seq = atomic64_inc_return(&peer->bfd_seq);
+
+	skb = alloc_skb(DATA_PACKET_HEAD_ROOM + WS_BFD_MARKER_LEN, GFP_ATOMIC);
+	if (unlikely(!skb))
+		return;
+	skb_reserve(skb, DATA_PACKET_HEAD_ROOM);
+	skb->dev = peer->device->dev;
+	PACKET_CB(skb)->mtu = skb->dev->mtu;
+	PACKET_CB(skb)->is_keepalive = false;
+	payload = skb_put(skb, WS_BFD_MARKER_LEN);
+	ws_bfd_encode(payload, WS_BFD_TYPE_PROBE, seq, ktime_get_real_ns(), 0);
+	skb_reset_network_header(skb);
+	skb_queue_tail(&peer->staged_packet_queue, skb);
+	wg_packet_send_staged_packets(peer);
+}
+
+void wg_packet_bfd_send_worker(struct work_struct *work)
+{
+	struct wg_peer *peer = container_of(work, struct wg_peer, bfd_work);
+
+	if (atomic_xchg(&peer->bfd_probe_req, 0))
+		wg_packet_send_bfd_probe(peer);
+	wg_peer_put(peer);
 }
 
 static void wg_packet_create_data_done(struct wg_peer *peer, struct sk_buff *first)
