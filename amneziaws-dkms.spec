@@ -1,6 +1,6 @@
 %global debug_package %{nil}
 
-Name:           amneziawg-dkms
+Name:           amneziaws-dkms
 Version:        1.0.20241112
 Release:        1%{?dist}
 Epoch:          1
@@ -17,7 +17,7 @@ BuildRequires:  sed
 BuildRequires:  make
 BuildRequires:  bc
 
-Provides:       kmod(amneziawg.ko) = %{epoch}:%{version}-%{release}
+Provides:       kmod(amneziaws.ko) = %{epoch}:%{version}-%{release}
 Requires:       dkms
 Requires:       kernel-devel
 Requires:       make
@@ -49,20 +49,20 @@ sed -i "s/^WIREGUARD_VERSION = .*/WIREGUARD_VERSION = %{version}/" %{_builddir}/
 %build
 
 %install
-mkdir -p %{buildroot}%{_usrsrc}/amneziawg-%{version}/
-make DESTDIR=%{buildroot} DKMSDIR=%{_usrsrc}/amneziawg-%{version}/ \
+mkdir -p %{buildroot}%{_usrsrc}/amneziaws-%{version}/
+make DESTDIR=%{buildroot} DKMSDIR=%{_usrsrc}/amneziaws-%{version}/ \
     -C %{_builddir}/amneziawg-linux-kernel-module-%{version}/src dkms-install
 
 %post
-dkms add -m amneziawg -v %{version} -q --rpm_safe_upgrade || :
-dkms build -m amneziawg -v %{version} -q || :
-dkms install -m amneziawg -v %{version} -q --force || :
-echo "amneziawg-dkms-%{version}-%{release}" > /var/lib/dkms/amneziawg/%{version}/version
+dkms add -m amneziaws -v %{version} -q --rpm_safe_upgrade || :
+dkms build -m amneziaws -v %{version} -q || :
+dkms install -m amneziaws -v %{version} -q --force || :
+echo "amneziaws-dkms-%{version}-%{release}" > /var/lib/dkms/amneziaws/%{version}/version
 
 %preun
 # Check if we are running an upgrade
 if [ $1 -ne 0 ]; then
-  WG_VERSION=$(dkms status amneziawg|grep installed|sort -r -V|awk '{print $2}'|cut -f1 -d,)
+  WG_VERSION=$(dkms status amneziaws|grep installed|sort -r -V|awk '{print $2}'|cut -f1 -d,)
   if [ "$WG_VERSION" != "%{version}" ] ; then
 
     true
@@ -75,18 +75,18 @@ if [ $1 -ne 0 ]; then
 fi
 
 # If we are not running an upgrade then remove everything!
-WG_VERSION_FILE=$(cat /var/lib/dkms/amneziawg/%{version}/version)
-WG_RPM_VERSION=amneziawg-dkms-%{version}-%{release}
+WG_VERSION_FILE=$(cat /var/lib/dkms/amneziaws/%{version}/version)
+WG_RPM_VERSION=amneziaws-dkms-%{version}-%{release}
 if [ "$WG_RPM_VERSION" = "$WG_VERSION_FILE" ]; then
 
-    dkms remove -m amneziawg -v %{version} -q --all --rpm_safe_upgrade || :
+    dkms remove -m amneziaws -v %{version} -q --all --rpm_safe_upgrade || :
 
 fi
 
 exit 0
 
 %files
-%{_usrsrc}/amneziawg-%{version}
+%{_usrsrc}/amneziaws-%{version}
 
 %changelog
 * Thu Oct 23 2024 Yuri Egorov <ye@amnezia.org> - 1.0.20241023-1
@@ -162,10 +162,10 @@ exit 0
 - WireGuard 1.0.0 has been released for Linux 5.6 :)
 
 * Thu Mar 19 2020 Joe Doss <joe@solidadmin.com> - 0.0.20200318-1
-- Remove patch: amneziawg-linux-compat-RHEL-0.0.20200215.patch
+- Remove patch: amneziaws-linux-compat-RHEL-0.0.20200215.patch
 
 * Sat Feb 15 2020 Joe Doss <joe@solidadmin.com> - 0.0.20200215-2
-- Apply patch: https://git.zx2c4.com/amneziawg-linux-compat/patch/?id=27ce49e385a87cb784368a0995f8284fd6887d8c
+- Apply patch: https://git.zx2c4.com/amneziaws-linux-compat/patch/?id=27ce49e385a87cb784368a0995f8284fd6887d8c
 
 * Fri Feb 14 2020 Joe Doss <joe@solidadmin.com> - 0.0.20200215-1
 - Update to 0.0.20200215
@@ -184,9 +184,9 @@ exit 0
 - RPM spec updates
 
 * Thu Dec 26 2019 Joe Doss <joe@solidadmin.com> - 0.0.20191226-1
-- Split amneziawg-tools back out into it's own spec
-- Switch to https://git.zx2c4.com/amneziawg-linux-compat repo
-- Move back to amneziawg-dkms spec
+- Split amneziaws-tools back out into it's own spec
+- Switch to https://git.zx2c4.com/amneziaws-linux-compat repo
+- Move back to amneziaws-dkms spec
 
 * Thu Dec 19 2019 Joe Doss <joe@solidadmin.com> - 0.0.20191219-1
 - Update to 0.0.20191219
@@ -199,8 +199,8 @@ exit 0
 
 * Wed Nov 27 2019 Joe Doss <joe@solidadmin.com> - 0.0.20191127-1
 - Update to 0.0.20191127
-- Add /var/lib/dkms/amneziawg/%{version}/version
-- Merge amneziawg-tools.spec and amneziawg-dkms.spec
+- Add /var/lib/dkms/amneziaws/%{version}/version
+- Merge amneziaws-tools.spec and amneziaws-dkms.spec
 - Move %posttrans back to $post as it didn't fix the Error! Could not locate dkms.conf file issues.
 - Add in logic for better uninstalls and upgrades
 

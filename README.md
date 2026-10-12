@@ -1,4 +1,4 @@
-# AmneziaWG kernel module
+# Amneziaws kernel module
 
 ## Table of contents
 
@@ -24,7 +24,7 @@ After kernel upgrade reboot is required.
 at least one line starting with `deb-src` is present and uncommented.
 3. Install pre-requisites - run `sudo apt install -y software-properties-common python3-launchpadlib gnupg2 linux-headers-$(uname -r)`.
 4. Run `sudo add-apt-repository ppa:amnezia/ppa`.
-5. Finally execute `sudo apt-get install -y amneziawg`.
+5. Finally execute `sudo apt-get install -y amneziaws`.
 
 ### Debian
 
@@ -41,7 +41,7 @@ sudo apt-key adv --keyserver keyserver.ubuntu.com --recv-keys 57290828
 echo "deb https://ppa.launchpadcontent.net/amnezia/ppa/ubuntu focal main" | sudo tee -a /etc/apt/sources.list
 echo "deb-src https://ppa.launchpadcontent.net/amnezia/ppa/ubuntu focal main" | sudo tee -a /etc/apt/sources.list
 sudo apt-get update
-sudo apt-get install -y amneziawg
+sudo apt-get install -y amneziaws
 ```
 
 ### Linux Mint
@@ -53,7 +53,7 @@ Proceed to `PPAs` section and add `ppa:amnezia/ppa` PPA repository, after that s
 After that, open `Terminal` and run:
 
 ```shell
-sudo apt-get install -y amneziawg
+sudo apt-get install -y amneziaws
 ```
 
 ### RHEL/CentOS/SUSE/Fedora Core
@@ -63,8 +63,8 @@ sudo apt-get install -y amneziawg
 Open `Terminal` and run:
 
 ```shell
-sudo dnf copr enable amneziavpn/amneziawg
-sudo dnf install amneziawg-dkms amneziawg-tools
+sudo dnf copr enable amneziavpn/amneziaws
+sudo dnf install amneziaws-dkms amneziaws-tools
 ```
 
 Before installation it is strictly recommended to upgrade your system kernel to the latest available version and perform
@@ -76,7 +76,7 @@ You may need to install kernel headers and/or build essentials packages before r
 
 1. In Terminal:
     ```shell
-    git clone https://github.com/amnezia-vpn/amneziawg-linux-kernel-module.git
+    git clone https://github.com/wirescale/amneziawg-linux-kernel-module.git
     cd amneziawg-linux-kernel-module/src
     ```
 
@@ -98,9 +98,9 @@ and link resulting tree to `kernel` symlink:
     Or on a capable system you may want to use DKMS for this:
     ```shell
     sudo make dkms-install
-    sudo dkms add -m amneziawg -v 1.0.0
-    sudo dkms build -m amneziawg -v 1.0.0
-    sudo dkms install -m amneziawg -v 1.0.0
+    sudo dkms add -m amneziaws -v 1.0.0
+    sudo dkms build -m amneziaws -v 1.0.0
+    sudo dkms install -m amneziaws -v 1.0.0
     ```
 
 ## Configuration
@@ -127,7 +127,7 @@ and link resulting tree to `kernel` symlink:
 To get more details, you can enable the dynamic debug feature for the module:
 
 ```shell
-echo "module amneziawg +p" | sudo tee /sys/kernel/debug/dynamic_debug/control
+echo "module amneziaws +p" | sudo tee /sys/kernel/debug/dynamic_debug/control
 ```
 
 This will log messages to dmesg, which can be watched live with:
@@ -155,7 +155,7 @@ In some rare cases, setup script may not find your kernel's sourcetree automatic
 then and link them to DKMS module sources, e.g.
 
 ```shell
-ln -s /path/to/your/kernel/sources /usr/src/amneziawg-1.0.0/kernel
+ln -s /path/to/your/kernel/sources /usr/src/amneziaws-1.0.0/kernel
 ```
 
 Reinstall the package thereafter and you should get everything working.
