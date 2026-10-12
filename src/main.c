@@ -52,7 +52,7 @@ static int __init wg_mod_init(void)
 	if (ret < 0)
 		goto err_netlink;
 
-	pr_info("AmneziaWG " WIREGUARD_VERSION " loaded. See amnezia.org for information.\n");
+	pr_info("Amneziaws " WIREGUARD_VERSION " loaded. See amnezia.org for information.\n");
 	pr_info("Copyright (C) 2015-2019 Jason A. Donenfeld <Jason@zx2c4.com>. All Rights Reserved.\n");
 	pr_info("Copyright (C) 2024-2025 AmneziaVPN <admin@amnezia.org>. All Rights Reserved.\n");
 
@@ -82,7 +82,7 @@ module_param(bogus_endpoints_prefix6, charp, 0600);
 module_init(wg_mod_init);
 module_exit(wg_mod_exit);
 MODULE_LICENSE("GPL v2");
-MODULE_DESCRIPTION("AmneziaWG secure network tunnel");
+MODULE_DESCRIPTION("Amneziaws secure network tunnel");
 MODULE_AUTHOR("Jason A. Donenfeld <Jason@zx2c4.com>, AmneziaVPN <admin@amnezia.org>");
 MODULE_VERSION(WIREGUARD_VERSION);
 MODULE_ALIAS_RTNL_LINK(KBUILD_MODNAME);
