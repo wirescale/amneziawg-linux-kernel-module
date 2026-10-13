@@ -9,6 +9,7 @@
   - [RHEL/CentOS/SUSE/Fedora Core](#rhelcentossusefedora-core)
 - [Manual build](#manual-build)
 - [Configuration](#configuration)
+- [BFD (path liveness probes)](#bfd-path-liveness-probes)
 - [Troubleshooting](#troubleshooting)
 - [License](#license)
 
@@ -116,6 +117,41 @@ and link resulting tree to `kernel` symlink:
 - H1/H2/H3/H4 — must be unique among each other; recommended range is from 5 to 2147483647 inclusive
 
 `* Assuming a basic internet connection with an MTU value of 1280.`
+
+## BFD (path liveness probes)
+
+This fork adds a BFD-style path-liveness mechanism used by wirescale: each side
+periodically sends short probe packets inside the encrypted data path and measures
+round-trip time, loss and last-success timestamps per peer (hub-side probing is
+supported too — the mechanism is symmetric).
+
+- **Interception** — probes are recognized in `wg_packet_consume_data_done` by a
+  30-byte marker (big-endian magic `0x57534246`, version 1, types `PROBE=1` /
+  `REPLY=2`) and are never delivered to the TUN device.
+- **Auto-reply** — an incoming `PROBE` is answered immediately with a `REPLY` back
+  to the source endpoint (keepalive-recipe packet with payload,
+  `is_keepalive = false`); no userspace involvement.
+- **Statistics** — an incoming `REPLY` updates per-peer atomics exposed in the
+  device dump:
+  - `WGPEER_A_BFD_LAST_RTT_NS` — round-trip time of the last reply (ns)
+  - `WGPEER_A_BFD_LAST_OK_TS` — unix timestamp of the last reply (ns)
+  - `WGPEER_A_BFD_LOSS` — consecutive probes sent without a reply
+  - `WGPEER_A_BFD_SEQ` — sequence number of the last probe sent
+- **Sending probes** — set `WGPEER_A_SEND_PROBE` (NLA_FLAG) in `WG_CMD_SET_DEVICE`
+  to transmit one probe to the peer.
+
+### Compatibility
+
+- The generic netlink family is **`amneziaws`** (stock module: `amneziawg`) —
+  clients must resolve the new family name; everything else in the netlink ABI is
+  unchanged.
+- BFD attributes are appended at the end of the `wgpeer_attribute` enum, so their
+  numeric values are stable and existing tooling keeps working against this module.
+- Peer running the stock `amneziawg` module does not recognize the marker: no
+  `REPLY` comes back, the probing side reports loss and degrades to legacy signals
+  (last handshake / rx counters). Connectivity is not affected — mixed clusters
+  (some nodes on the stock module) stay up, only BFD-based detection is unavailable
+  for those peers.
 
 ## Troubleshooting
 
