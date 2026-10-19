@@ -524,9 +524,20 @@ static void wg_packet_consume_data_done(struct wg_peer *peer,
 	if (unlikely(pskb_trim(skb, len)))
 		goto packet_processed;
 
-	routed_peer = wg_allowedips_lookup_src(&peer->device->peer_allowedips,
-					       skb);
-	wg_peer_put(routed_peer); /* We don't need the extra reference. */
+	/* Relay-chain: peers marked WGPEER_A_TRUST_SRC (mesh/backup peers of
+	 * cluster members) bypass the allowedips source check — the same src
+	 * IP may legitimately arrive from several predecessors (chain legs)
+	 * while owned by the direct spoke peer. Regular peers keep the strict
+	 * anti-spoof check below. The trust path takes no lookup reference,
+	 * so there is nothing to put.
+	 */
+	if (unlikely(peer->trust_src))
+		routed_peer = peer;
+	else {
+		routed_peer = wg_allowedips_lookup_src(&peer->device->peer_allowedips,
+						       skb);
+		wg_peer_put(routed_peer); /* We don't need the extra reference. */
+	}
 
 	if (unlikely(routed_peer != peer))
 		goto dishonest_packet_peer;

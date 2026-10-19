@@ -83,7 +83,8 @@ static const struct nla_policy peer_policy[WGPEER_A_MAX + 1] = {
 	[WGPEER_A_ALLOWEDIPS]				= { .type = NLA_NESTED },
 	[WGPEER_A_PROTOCOL_VERSION]			= { .type = NLA_U32 },
 	[WGPEER_A_ADVANCED_SECURITY]    		= { .type = NLA_FLAG },
-	[WGPEER_A_SEND_PROBE]				= { .type = NLA_FLAG }
+	[WGPEER_A_SEND_PROBE]				= { .type = NLA_FLAG },
+	[WGPEER_A_TRUST_SRC]				= { .type = NLA_U8 }
 };
 
 static const struct nla_policy allowedip_policy[WGALLOWEDIP_A_MAX + 1] = {
@@ -695,6 +696,14 @@ static int set_peer(struct wg_device *wg, struct nlattr **attrs)
 		wg_peer_remove(peer);
 		goto out;
 	}
+
+	/* Relay-chain (WGPEER_A_TRUST_SRC): skip the allowedips source check
+	 * for this peer in the receive path. Present = apply (0 or 1);
+	 * absent = unchanged, so partial updates (SEND_PROBE, endpoint)
+	 * cannot clobber it.
+	 */
+	if (attrs[WGPEER_A_TRUST_SRC])
+		peer->trust_src = !!nla_get_u8(attrs[WGPEER_A_TRUST_SRC]);
 
 	if (preshared_key) {
 		down_write(&peer->handshake.lock);

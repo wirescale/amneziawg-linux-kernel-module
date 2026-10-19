@@ -248,6 +248,16 @@ enum wgpeer_attribute {
 	WGPEER_A_BFD_LAST_OK_TS,
 	WGPEER_A_BFD_LOSS,
 	WGPEER_A_BFD_SEQ,
+	/* Relay-chain (FR-CHAIN): NLA_U8 0/1 — skip the allowedips source
+	 * check for this peer (accept packets whose src IP is owned by another
+	 * peer). Set only on trusted mesh/backup peers of cluster members;
+	 * direct spoke peers stay strict (anti-spoof). Absent = unchanged;
+	 * a separate attribute (not a WGPEER_F bit) so partial updates
+	 * (SEND_PROBE, endpoint) cannot clobber it. Legacy modules reject
+	 * the unknown attribute with EINVAL — that error is the capability
+	 * probe for chains support.
+	 */
+	WGPEER_A_TRUST_SRC,
 	__WGPEER_A_LAST
 };
 #define WGPEER_A_MAX (__WGPEER_A_LAST - 1)

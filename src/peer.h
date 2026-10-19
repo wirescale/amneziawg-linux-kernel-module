@@ -76,6 +76,11 @@ struct wg_peer {
 	atomic64_t bfd_last_rtt_ns;
 	atomic64_t bfd_last_probe_ok_ts;
 	atomic_t bfd_loss;
+	/* Relay-chain: accept packets from this peer with a src IP not owned
+	 * by it (WGPEER_A_TRUST_SRC). Written under device_update_lock in
+	 * set_peer, read lock-free in the receive path.
+	 */
+	bool trust_src;
 };
 
 struct wg_peer *wg_peer_create(struct wg_device *wg,
