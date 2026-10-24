@@ -27,3 +27,4 @@ src/kernel
 .cache
 compile_commands.json
 .clangd
+*-message.txt
